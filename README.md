@@ -45,7 +45,8 @@ Protocol_Parser 状态机流程如下：
 2. **CHECK_HEAD1**：本实现将 IDLE 与第一字节检查合并（若非 0x7E，保持 IDLE）。
 3. **CHECK_HEAD2**：收到第二个字节，若仍为 `0x7E`，进入数据接收阶段。
 4. **GET_DATA**：连续接收 2 字节 Payload。
-5. **PROCESS**：
+
+5. **EVAL**：
    - 若 Payload == `AA AA`，准备回复 `7E 7E BB BB`。
    - 否则准备回复 `7E 7E CC CC`。
 6. **SEND_REPLY**：依次发送 4 个字节，全部发完后回到 **IDLE**。
