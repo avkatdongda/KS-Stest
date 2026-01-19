@@ -26,7 +26,10 @@ architecture rtl of protocol_parser is
     CHECK_HEAD1,
     CHECK_HEAD2,
     GET_DATA,
+
     EVAL,
+=======
+
     SEND_REPLY
   );
 
@@ -39,11 +42,13 @@ architecture rtl of protocol_parser is
   signal reply_data    : reply_array_t := (others => (others => '0'));
   signal payload_idx   : integer range 0 to 1 := 0;
   signal reply_idx     : integer range 0 to 3 := 0;
+
   -- 输出寄存器与发送节拍控制（先装载数据，后给出 tx_start 脉冲）
   signal tx_start_reg  : std_logic := '0';
   signal tx_data_reg   : std_logic_vector(7 downto 0) := (others => '0');
   signal send_pending  : std_logic := '0';
   signal start_pending : std_logic := '0';
+
 
   -- 固定协议字节常量
   constant HEAD_BYTE   : std_logic_vector(7 downto 0) := x"7E";
@@ -66,6 +71,7 @@ begin
       tx_start_reg <= '0';
       tx_data_reg  <= (others => '0');
       send_pending <= '0';
+
       start_pending <= '0';
     elsif rising_edge(clk) then
       -- tx_start 默认拉低，确保单周期脉冲
@@ -76,6 +82,7 @@ begin
           start_pending <= '0';
         end if;
       end if;
+
 
       case state is
         when IDLE =>
@@ -115,13 +122,17 @@ begin
           if rx_done = '1' then
             payload(payload_idx) <= rx_data;
             if payload_idx = 1 then
+
               state <= EVAL;
+
             else
               payload_idx <= payload_idx + 1;
             end if;
           end if;
 
+
         when EVAL =>
+
           -- 生成回复帧内容
           reply_data(0) <= HEAD_BYTE;
           reply_data(1) <= HEAD_BYTE;
@@ -140,9 +151,11 @@ begin
           -- 串行输出 4 字节，并等待 UART_TX 空闲
           if send_pending = '1' then
             if tx_busy = '0' then
+
               tx_data_reg   <= reply_data(reply_idx);
               start_pending <= '1';
               send_pending  <= '0';
+
             end if;
           else
             if tx_busy = '0' then
